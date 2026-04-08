@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SP · Funciones · Triggers · Vistas — FUNDAPP</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --border: #1e2d45;
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --accent3: #10b981;
+    --accent4: #f59e0b;
+    --accent5: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --keyword: #c084fc;
+    --function: #60a5fa;
+    --string: #86efac;
+    --number: #fbbf24;
+    --comment: #4b6075;
+    --type: #f472b6;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* GRID BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 48px 40px 32px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(124,58,237,0.08) 0%, transparent 100%);
+  }
+
+  .header-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    background: rgba(0,212,255,0.08);
+    border: 1px solid rgba(0,212,255,0.2);
+    padding: 4px 12px;
+    border-radius: 2px;
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 800;
+    line-height: 1.1;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .header-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  /* NAV PILLS */
+  nav {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(17,24,39,0.8);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+  }
+
+  nav a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  nav a.sp    { color: var(--accent);  border-color: rgba(0,212,255,0.3);  }
+  nav a.fn    { color: var(--accent3); border-color: rgba(16,185,129,0.3); }
+  nav a.tr    { color: var(--accent4); border-color: rgba(245,158,11,0.3); }
+  nav a.vw    { color: var(--accent2); border-color: rgba(124,58,237,0.3); }
+  nav a.tx    { color: var(--accent5); border-color: rgba(239,68,68,0.3);  }
+
+  nav a:hover { background: rgba(255,255,255,0.05); transform: translateY(-1px); }
+
+  /* MAIN */
+  main {
+    position: relative;
+    z-index: 1;
+    padding: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+
+  /* SECTION */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .section-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .section-icon.sp { background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.2); }
+  .section-icon.fn { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); }
+  .section-icon.tr { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); }
+  .section-icon.vw { background: rgba(124,58,237,0.1); border: 1px solid rgba(124,58,237,0.2); }
+  .section-icon.tx { background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.2);  }
+
+  .section-title { font-size: 22px; font-weight: 800; color: #fff; }
+  .section-desc  { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* CODE CARD */
+  .code-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .code-card:hover { border-color: rgba(0,212,255,0.2); }
+
+  .code-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .code-card-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .tag {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+
+  .tag-insert { background: rgba(16,185,129,0.15); color: #10b981; }
+  .tag-select { background: rgba(0,212,255,0.15);  color: #00d4ff; }
+  .tag-update { background: rgba(245,158,11,0.15); color: #f59e0b; }
+  .tag-delete { background: rgba(239,68,68,0.15);  color: #ef4444; }
+  .tag-sp     { background: rgba(192,132,252,0.15);color: #c084fc; }
+  .tag-fn     { background: rgba(16,185,129,0.15); color: #10b981; }
+  .tag-trg    { background: rgba(245,158,11,0.15); color: #f59e0b; }
+  .tag-view   { background: rgba(124,58,237,0.15); color: #7c3aed; }
+  .tag-tx     { background: rgba(239,68,68,0.15);  color: #ef4444; }
+
+  .toggle-icon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    transition: transform 0.2s;
+  }
+
+  .code-body { display: none; }
+  .code-body.open { display: block; }
+  .code-card-header.open .toggle-icon { transform: rotate(180deg); }
+
+  pre {
+    margin: 0;
+    padding: 24px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: #cdd6f4;
+    tab-size: 4;
+  }
+
+  /* SQL HIGHLIGHTING */
+  .kw  { color: var(--keyword); font-weight: 600; }
+  .fn  { color: var(--function); }
+  .str { color: var(--string); }
+  .num { color: var(--number); }
+  .cmt { color: var(--comment); font-style: italic; }
+  .typ { color: var(--type); }
+  .obj { color: #e2b96f; }
+
+  /* DESCRIPTION CALLOUT */
+  .callout {
+    background: rgba(0,212,255,0.04);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.6;
+  }
+
+  .callout.fn  { border-color: var(--accent3); background: rgba(16,185,129,0.04); }
+  .callout.tr  { border-color: var(--accent4); background: rgba(245,158,11,0.04); }
+  .callout.vw  { border-color: var(--accent2); background: rgba(124,58,237,0.04); }
+  .callout.tx  { border-color: var(--accent5); background: rgba(239,68,68,0.04); }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 40px;
+    border-top: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 600px) {
+    header, main { padding: 24px 20px; }
+    nav { padding: 16px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">FUNDAPP · Base de Datos</div>
+  <h1>SP · Funciones · Triggers<br><span>Vistas · Transacciones</span></h1>
+  <div class="header-sub">// USE FUNDAPP; &nbsp;·&nbsp; Scripts DML demostrativos &nbsp;·&nbsp; SQL Server</div>
+</header>
+
+<nav>
+  <a href="#sp"  class="sp">⚙ Stored Procedures</a>
+  <a href="#fn"  class="fn">ƒ Funciones</a>
+  <a href="#tr"  class="tr">⚡ Triggers</a>
+  <a href="#vw"  class="vw">👁 Vistas</a>
+  <a href="#tx"  class="tx">🔒 Transacciones</a>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════════ STORED PROCEDURES -->
+<section id="sp">
+  <div class="section-header">
+    <div class="section-icon sp">⚙</div>
+    <div>
+      <div class="section-title">Stored Procedures</div>
+      <div class="section-desc">CREATE PROCEDURE · INSERT · SELECT · RAISERROR</div>
+    </div>
+  </div>
+
+  <div class="callout">
+    Los <strong>Stored Procedures</strong> encapsulan lógica de negocio reutilizable en el servidor.
+    Aquí se muestran 5 SPs que cubren: validación de datos, INSERT condicional, y SELECT con JOIN + agregación.
+  </div>
+
+  <!-- SP 1 -->
+  <div class="code-card">
+    <div class="code-card-header" onclick="toggle(this)">
+      <div class="code-card-title">
+        <span class="tag tag-sp">SP</span>
+        <span class="tag tag-insert">INSERT</span>
+        SP_RegistrarDonacion — Donaciones.SP
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="code-body">
+<pre><span class="kw">CREATE PROCEDURE</span> <span class="obj">Donaciones.SP_RegistrarDonacion</span>
+    <span class="typ">@PersonaID</span>  <span class="kw">INT</span>,
+    <span class="typ">@Monto</span>      <span class="kw">DECIMAL</span>(<span class="num">12</span>,<span class="num">2</span>),
+    <span class="typ">@MetodoPago</span> <span class="kw">VARCHAR</span>(<span class="num">50</span>)
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">SET NOCOUNT ON</span>;
+
+    <span class="cmt">-- Validación: el monto debe ser positivo</span>
+    <span class="kw">IF</span> <span class="typ">@Monto</span> &lt;= <span class="num">0</span>
+    <span class="kw">BEGIN</span>
+        <span class="fn">RAISERROR</span>(<span class="str">'El monto debe ser mayor que 0.'</span>, <span class="num">16</span>, <span class="num">1</span>);
+        <span class="kw">RETURN</span>;
+    <span class="kw">END</span>
+
+    <span class="cmt">-- DML: INSERT de la donación</span>
+    <span class="kw">INSERT INTO</span> <span class="obj">Donaciones.Donacion</span>
+        (PersonaID, Monto, MetodoPago)
+    <span class="kw">VALUES</span>
+        (<span class="typ">@PersonaID</span>, <span class="typ">@Monto</span>, <span class="typ">@MetodoPago</span>);
+
+    <span class="fn">PRINT</span> <span class="str">'Donación registrada correctamente.'</span>;
+<span class="kw">END</span>;</pre>
+    </div>
+  </div>
+
+  <!-- SP 2 -->
+  <div class="code-card">
+    <div class="code-card-header" onclick="toggle(this)">
+      <div class="code-card-title">
+        <span class="tag tag-sp">SP</span>
+        <span class="tag tag-insert">INSERT</span>
+        SP_RegistrarVoluntario — Personas.SP
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="code-body">
+<pre><span class="kw">CREATE PROCEDURE</span> <span class="obj">Personas.SP_RegistrarVoluntario</span>
+    <span class="typ">@PersonaID</span>   <span class="kw">INT</span>,
+    <span class="typ">@FechaIngreso</span> <span class="kw">DATE</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">SET NOCOUNT ON</span>;
+
+    <span class="cmt">-- Verifica duplicados antes de insertar</span>
+    <span class="kw">IF EXISTS</span> (<span class="kw">SELECT</span> <span class="num">1</span> <span class="kw">FROM</span> <span class="obj">Personas.Voluntario</span>
+               <span class="kw">WHERE</span> PersonaID = <span class="typ">@PersonaID</span>)
+    <span class="kw">BEGIN</span>
+        <span class="fn">RAISERROR</span>(<span class="str">'La persona ya está registrada como voluntario.'</span>, <span class="num">16</span>, <span class="num">1</span>);
+        <span class="kw">RETURN</span>;
+    <span class="kw">END</span>
+
+    <span class="cmt">-- DML: INSERT del voluntario</span>
+    <span class="kw">INSERT INTO</span> <span class="obj">Personas.Voluntario</span>
+        (PersonaID, FechaIngreso)
+    <span class="kw">VALUES</span>
+        (<span class="typ">@PersonaID</span>, <span class="typ">@FechaIngreso</span>);
+
+    <span class="fn">PRINT</span> <span class="str">'Voluntario registrado correctamente.'</span>;
+<span class="kw">END</span>;</pre>
+    </div>
+  </div>
+
+  <!-- SP 3 -->
+  <div class="code-card">
+    <div class="code-card-header" onclick="toggle(this)">
+      <div class="code-card-title">
+        <span class="tag tag-sp">SP</span>
+        <span class="tag tag-insert">INSERT</span>
+        SP_InscribirVoluntario — Voluntariado.SP
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="code-body">
+<pre><span class="kw">CREATE PROCEDURE</span> <span class="obj">Voluntariado.SP_InscribirVoluntario</span>
+    <span class="typ">@VoluntarioID</span> <span class="kw">INT</span>,
+    <span class="typ">@ActividadID</span>  <span class="kw">INT</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">SET NOCOUNT ON</span>;
+
+    <span class="cmt">-- Subconsulta EXISTS para evitar duplicados</span>
+    <span class="kw">IF EXISTS</span> (
+        <span class="kw">SELECT</span> <span class="num">1</span>
+        <span class="kw">FROM</span>  <span class="obj">Voluntariado.Inscripcion</span>
+        <span class="kw">WHERE</span> VoluntarioID = <span class="typ">@VoluntarioID</span>
+          <span class="kw">AND</span> ActividadID  = <span class="typ">@ActividadID</span>
+    )
+    <span class="kw">BEGIN</span>
+        <span class="fn">RAISERROR</span>(<span class="str">'El voluntario ya está inscrito en esta actividad.'</span>, <span class="num">16</span>, <span class="num">1</span>);
+        <span class="kw">RETURN</span>;
+    <span class="kw">END</span>
+
+    <span class="cmt">-- DML: INSERT de la inscripción</span>
+    <span class="kw">INSERT INTO</span> <span class="obj">Voluntariado.Inscripcion</span>
+        (VoluntarioID, ActividadID)
+    <span class="kw">VALUES</span>
+        (<span class="typ">@VoluntarioID</span>, <span class="typ">@ActividadID</span>);
+
+    <span class="fn">PRINT</span> <span class="str">'Inscripción realizada correctamente.'</span>;
+<span class="kw">END</span>;</pre>
+    </div>
+  </div>
+
+  <!-- SP 4 -->
+  <div class="code-card">
+    <div class="code-card-header" onclick="toggle(this)">
+      <div class="code-card-title">
+        <span class="tag tag-sp">SP</span>
+        <span class="tag tag-insert">INSERT</span>
+        SP_GenerarCertificado — Certificados.SP
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="code-body">
+<pre><span class="kw">CREATE PROCEDURE</span> <span class="obj">Certificados.SP_GenerarCertificado</span>
+    <span class="typ">@VoluntarioID</span> <span class="kw">INT</span>,
+    <span class="typ">@ActividadID</span>  <span class="kw">INT</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">SET NOCOUNT ON</span>;
+
+    <span class="kw">IF EXISTS</span> (
+        <span class="kw">SELECT</span> <span class="num">1</span>
+        <span class="kw">FROM</span>  <span class="obj">Certificados.Certificado</span>
+        <span class="kw">WHERE</span> VoluntarioID = <span class="typ">@VoluntarioID</span>
+          <span class="kw">AND</span> ActividadID  = <span class="typ">@ActividadID</span>
+    )
+    <span class="kw">BEGIN</span>
+        <span class="fn">RAISERROR</span>(<span class="str">'Ya existe un certificado para esta actividad.'</span>, <span class="num">16</span>, <span class="num">1</span>);
+        <span class="kw">RETURN</span>;
+    <span class="kw">END</span>
+
+    <span class="kw">INSERT INTO</span> <span class="obj">Certificados.Certificado</span>
+        (VoluntarioID, ActividadID)
+    <span class="kw">VALUES</span>
+        (<span class="typ">@VoluntarioID</span>, <span class="typ">@ActividadID</span>);
+
+    <span class="fn">PRINT</span> <span class="str">'Certificado generado correctamente.'</span>;
+<span class="kw">END</span>;</pre>
+    </div>
+  </div>
+
+  <!-- SP 5 -->
+  <div class="code-card">
+    <div class="code-card-header" onclick="toggle(this)">
+      <div class="code-card-title">
+        <span class="tag tag-sp">SP</span>
+        <span class="tag tag-select">SELECT</span>
+        SP_TotalDonadoPorPersona — Reporte con LEFT JOIN
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="code-body">
+<pre><span class="kw">CREATE PROCEDURE</span> <span class="obj">Donaciones.SP_TotalDonadoPorPersona</span>
+    <span class="typ">@PersonaID</span> <span class="kw">INT</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">SET NOCOUNT ON</span>;
+
+    <span class="cmt">-- SELECT con LEFT JOIN y agregación SUM</span>
+    <span class="kw">SELECT</span>
+        p.PrimerNombre,
+        p.PrimerApellido,
+        <span class="fn">ISNULL</span>(<span class="fn">SUM</span>(d.Monto), <span class="num">0</span>) <span class="kw">AS</span> TotalDonado
+    <span class="kw">FROM</span>       <span class="obj">Personas.Persona</span>   p
+    <span class="kw">LEFT JOIN</span>  <span class="obj">Donaciones.Donacion</span> d
+        <span class="kw">ON</span> p.PersonaID = d.PersonaID
+    <span class="kw">WHERE</span> p.PersonaID = <span class="typ">@PersonaID</span>
+    <span class="kw">GROUP BY</span>
+        p.PrimerNombre,
+        p.PrimerApellido;
+<span class="kw">END</span>;</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ FUNCIONES -->
+<section id="fn">
+  <div class="section-header">
+    <div class="section-icon fn">ƒ</div>
+    <div>
+      <div class="section-title">Funciones Escalares</div>
+      <div class="section-desc">CREATE FUNCTION · RETURNS · SELECT escalar</div>
+    </div>
+  </div>
+
+  <div class="callout fn">
+    Las <strong>funciones escalares</strong> retornan un único valor calculado. Se usan dentro de SELECT, WHERE o como valores en otras consultas.
+    Cubren: suma, promedio, conteo por entidad.
+  </div>
+
+  <div class="code-card">
+    <div class="code-card-header" onclick="toggle(this)">
+      <div class="code-card-title">
+        <span class="tag tag-fn">FN</span>
+        <span class="tag tag-select">SELECT</span>
+        FN_TotalDonado · FN_PromedioDonaciones · FN_TotalInscritos · FN_TotalCertificados · FN_UsuariosActivos
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="code-body">
+<pre><span class="cmt">/* 1 — Total donado por una persona específica */</span>
+<span class="kw">CREATE FUNCTION</span> <span class="obj">Donaciones.FN_TotalDonado</span>(<span class="typ">@PersonaID</span> <span class="kw">INT</span>)
+<span class="kw">RETURNS DECIMAL</span>(<span class="num">12</span>,<span class="num">2</span>)
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> <span class="typ">@Total</span> <span class="kw">DECIMAL</span>(<span class="num">12</span>,<span class="num">2</span>);
+    <span class="kw">SELECT</span> <span class="typ">@Total</span> = <span class="fn">ISNULL</span>(<span class="fn">SUM</span>(Monto), <span class="num">0</span>)
+    <span class="kw">FROM</span>  <span class="obj">Donaciones.Donacion</span>
+    <span class="kw">WHERE</span> PersonaID = <span class="typ">@PersonaID</span>;
+    <span class="kw">RETURN</span> <span class="typ">@Total</span>;
+<span class="kw">END</span>;
+<span class="kw">GO</span>
+
+<span class="cmt">/* 2 — Promedio global de todas las donaciones */</span>
+<span class="kw">CREATE FUNCTION</span> <span class="obj">Donaciones.FN_PromedioDonaciones</span>()
+<span class="kw">RETURNS DECIMAL</span>(<span class="num">12</span>,<span class="num">2</span>)
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> <span class="typ">@Prom</span> <span class="kw">DECIMAL</span>(<span class="num">12</span>,<span class="num">2</span>);
+    <span class="kw">SELECT</span> <span class="typ">@Prom</span> = <span class="fn">AVG</span>(Monto) <span class="kw">FROM</span> <span class="obj">Donaciones.Donacion</span>;
+    <span class="kw">RETURN</span> <span class="typ">@Prom</span>;
+<span class="kw">END</span>;
+<span class="kw">GO</span>
+
+<span class="cmt">/* 3 — Total de inscritos en una actividad */</span>
+<span class="kw">CREATE FUNCTION</span> <span class="obj">Voluntariado.FN_TotalInscritos</span>(<span class="typ">@ActividadID</span> <span class="kw">INT</span>)
+<span class="kw">RETURNS INT</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> <span class="typ">@Total</span> <span class="kw">INT</span>;
+    <span class="kw">SELECT</span> <span class="typ">@Total</span> = <span class="fn">COUNT</span>(*)
+    <span class="kw">FROM</span>  <span class="obj">Voluntariado.Inscripcion</span>
+    <span class="kw">WHERE</span> ActividadID = <span class="typ">@ActividadID</span>;
+    <span class="kw">RETURN</span> <span class="typ">@Total</span>;
+<span class="kw">END</span>;
+<span class="kw">GO</span>
+
+<span class="cmt">/* 4 — Certificados emitidos a un voluntario */</span>
+<span class="kw">CREATE FUNCTION</span> <span class="obj">Certificados.FN_TotalCertificados</span>(<span class="typ">@VoluntarioID</span> <span class="kw">INT</span>)
+<span class="kw">RETURNS INT</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> <span class="typ">@Total</span> <span class="kw">INT</span>;
+    <span class="kw">SELECT</span> <span class="typ">@Total</span> = <span class="fn">COUNT</span>(*)
+    <span class="kw">FROM</span>  <span class="obj">Certificados.Certificado</span>
+    <span class="kw">WHERE</span> VoluntarioID = <span class="typ">@VoluntarioID</span>;
+    <span class="kw">RETURN</span> <span class="typ">@Total</span>;
+<span class="kw">END</span>;
+<span class="kw">GO</span>
+
+<span class="cmt">/* 5 — Conteo de usuarios activos en el sistema */</span>
+<span class="kw">CREATE FUNCTION</span> <span class="obj">Seguridad.FN_UsuariosActivos</span>()
+<span class="kw">RETURNS INT</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> <span class="typ">@Total</span> <span class="kw">INT</span>;
+    <span class="kw">SELECT</span> <span class="typ">@Total</span> = <span class="fn">COUNT</span>(*)
+    <span class="kw">FROM</span>  <span class="obj">Seguridad.Usuario</span>
+    <span class="kw">WHERE</span> Estado = <span class="num">1</span>;
+    <span class="kw">RETURN</span> <span class="typ">@Total</span>;
+<span class="kw">END</span>;</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ TRIGGERS -->
+<section id="tr">
+  <div class="section-header">
+    <div class="section-icon tr">⚡</div>
+    <div>
+      <div class="section-title">Triggers</div>
+      <div class="section-desc">INSTEAD OF INSERT · AFTER INSERT · AFTER UPDATE</div>
+    </div>
+  </div>
+
+  <div class="callout tr">
+    Los <strong>Triggers</strong> se disparan automáticamente ante eventos DML. Se usan aquí para validar cupos,
+    generar códigos automáticos, registrar auditoría, rechazar datos inválidos y actualizar estados.
+  </div>
+
+  <!-- TR 1 -->
+  <div class="code-card">
+    <div class="code-card-header" onclick="toggle(this)">
+      <div class="code-card-title">
+        <span class="tag tag-trg">TRIGGER</span>
+        <span class="tag tag-insert">INSTEAD OF INSERT</span>
+        TR_ValidarCupo — Control de aforo máximo
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="code-body">
+<pre><span class="kw">CREATE TRIGGER</span> <span class="obj">TR_ValidarCupo</span>
+<span class="kw">ON</span>  <span class="obj">Voluntariado.Inscripcion</span>
+<span class="kw">INSTEAD OF INSERT</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="cmt">-- JOIN entre inserted y Actividad para verificar cupo</span>
+    <span class="kw">IF EXISTS</span> (
+        <span class="kw">SELECT</span> <span class="num">1</span>
+        <span class="kw">FROM</span> inserted i
+        <span class="kw">JOIN</span> <span class="obj">Voluntariado.Actividad</span> a
+          <span class="kw">ON</span> i.ActividadID = a.ActividadID
+        <span class="kw">WHERE</span> (
+            <span class="kw">SELECT</span> <span class="fn">COUNT</span>(*)
+            <span class="kw">FROM</span> <span class="obj">Voluntariado.Inscripcion</span>
+            <span class="kw">WHERE</span> ActividadID = i.ActividadID
+        ) &gt;= a.CupoMaximo
+    )
+    <span class="kw">BEGIN</span>
+        <span class="fn">RAISERROR</span>(<span class="str">'Cupo lleno.'</span>, <span class="num">16</span>, <span class="num">1</span>);
+        <span class="kw">RETURN</span>;
+    <span class="kw">END</span>
+
+    <span class="cmt">-- Si hay cupo disponible, ejecuta el INSERT real</span>
+    <span class="kw">INSERT INTO</span> <span class="obj">Voluntariado.Inscripcion</span>(VoluntarioID, ActividadID)
+    <span class="kw">SELECT</span> VoluntarioID, ActividadID <span class="kw">FROM</span> inserted;
+<span class="kw">END</span>;</pre>
+    </div>
+  </div>
+
+  <!-- TR 2 -->
+  <div class="code-card">
+    <div class="code-card-header" onclick="toggle(this)">
+      <div class="code-card-title">
+        <span class="tag tag-trg">TRIGGER</span>
+        <span class="tag tag-update">AFTER INSERT → UPDATE</span>
+        TR_CodigoCertificado — Código automático
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="code-body">
+<pre><span class="kw">CREATE TRIGGER</span> <span class="obj">TR_CodigoCertificado</span>
+<span class="kw">ON</span>  <span class="obj">Certificados.Certificado</span>
+<span class="kw">AFTER INSERT</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="cmt">-- UPDATE automático que genera el código: BIO-{ID}-{AÑO}</span>
+    <span class="kw">UPDATE</span> c
+    <span class="kw">SET</span> CodigoCertificado = <span class="fn">CONCAT</span>(<span class="str">'BIO-'</span>, c.CertificadoID, <span class="str">'-'</span>, <span class="fn">YEAR</span>(<span class="fn">GETDATE</span>()))
+    <span class="kw">FROM</span> <span class="obj">Certificados.Certificado</span> c
+    <span class="kw">JOIN</span> inserted i <span class="kw">ON</span> c.CertificadoID = i.CertificadoID;
+<span class="kw">END</span>;</pre>
+    </div>
+  </div>
+
+  <!-- TR 3 -->
+  <div class="code-card">
+    <div class="code-card-header" onclick="toggle(this)">
+      <div class="code-card-title">
+        <span class="tag tag-trg">TRIGGER</span>
+        <span class="tag tag-insert">AFTER INSERT</span>
+        TR_AuditoriaDonacion — Log automático
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="code-body">
+<pre><span class="kw">CREATE TRIGGER</span> <span class="obj">TR_AuditoriaDonacion</span>
+<span class="kw">ON</span>  <span class="obj">Donaciones.Donacion</span>
+<span class="kw">AFTER INSERT</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="cmt">-- Inserta un registro de auditoría por cada donación nueva</span>
+    <span class="kw">INSERT INTO</span> <span class="obj">Seguridad.Auditoria</span>(UsuarioID, Accion, Tabla)
+    <span class="kw">SELECT</span> <span class="kw">NULL</span>, <span class="str">'INSERT'</span>, <span class="str">'Donacion'</span>
+    <span class="kw">FROM</span> inserted;
+<span class="kw">END</span>;
+
+<span class="cmt">-- Verificar auditoría:</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="obj">Seguridad.Auditoria</span>;</pre>
+    </div>
+  </div>
+
+  <!-- TR 4 -->
+  <div class="code-card">
+    <div class="code-card-header" onclick="toggle(this)">
+      <div class="code-card-title">
+        <span class="tag tag-trg">TRIGGER</span>
+        <span class="tag tag-insert">INSTEAD OF INSERT</span>
+        TR_ValidarMontoDonacion — Rechazar montos negativos
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="code-body">
+<pre><span class="kw">CREATE TRIGGER</span> <span class="obj">TR_ValidarMontoDonacion</span>
+<span class="kw">ON</span>  <span class="obj">Donaciones.Donacion</span>
+<span class="kw">INSTEAD OF INSERT</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="cmt">-- Bloquea INSERT si el monto es 0 o negativo</span>
+    <span class="kw">IF EXISTS</span> (<span class="kw">SELECT</span> <span class="num">1</span> <span class="kw">FROM</span> inserted <span class="kw">WHERE</span> Monto &lt;= <span class="num">0</span>)
+    <span class="kw">BEGIN</span>
+        <span class="fn">RAISERROR</span>(<span class="str">'Monto inválido.'</span>, <span class="num">16</span>, <span class="num">1</span>);
+        <span class="kw">RETURN</span>;
+    <span class="kw">END</span>
+
+    <span class="cmt">-- Monto válido → INSERT real</span>
+    <span class="kw">INSERT INTO</span> <span class="obj">Donaciones.Donacion</span>(PersonaID, Monto, MetodoPago)
+    <span class="kw">SELECT</span> PersonaID, Monto, MetodoPago <span class="kw">FROM</span> inserted;
+<span class="kw">END</span>;
+
+<span class="cmt">-- Prueba con monto negativo (debe fallar):</span>
+<span class="kw">INSERT INTO</span> <span class="obj">Donaciones.Donacion</span> (PersonaID, Monto, MetodoPago)
+<span class="kw">VALUES</span> (<span class="num">1</span>, <span class="num">-1000</span>, <span class="str">'Efectivo'</span>);</pre>
+    </div>
+  </div>
+
+  <!-- TR 5 -->
+  <div class="code-card">
+    <div class="code-card-header" onclick="toggle(this)">
+      <div class="code-card-title">
+        <span class="tag tag-trg">TRIGGER</span>
+        <span class="tag tag-update">AFTER UPDATE</span>
+        TR_FinalizarActividad — Cambio de estado automático
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="code-body">
+<pre><span class="kw">CREATE TRIGGER</span> <span class="obj">TR_FinalizarActividad</span>
+<span class="kw">ON</span>  <span class="obj">Voluntariado.Actividad</span>
+<span class="kw">AFTER UPDATE</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="cmt">-- Si la FechaFin ya pasó, marca la actividad como Finalizada</span>
+    <span class="kw">UPDATE</span> <span class="obj">Voluntariado.Actividad</span>
+    <span class="kw">SET</span>   Estado = <span class="str">'Finalizada'</span>
+    <span class="kw">WHERE</span> FechaFin &lt; <span class="fn">GETDATE</span>();
+<span class="kw">END</span>;
+
+<span class="cmt">-- Verificar estado:</span>
+<span class="kw">SELECT</span> ActividadID, Estado
+<span class="kw">FROM</span>  <span class="obj">Voluntariado.Actividad</span>
+<span class="kw">WHERE</span> ActividadID = <span class="num">1</span>;</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ VISTAS -->
+<section id="vw">
+  <div class="section-header">
+    <div class="section-icon vw">👁</div>
+    <div>
+      <div class="section-title">Vistas (Views)</div>
+      <div class="section-desc">CREATE VIEW · SELECT · JOIN · GROUP BY</div>
+    </div>
+  </div>
+
+  <div class="callout vw">
+    Las <strong>Vistas</strong> simplifican consultas complejas y ofrecen una capa de abstracción sobre las tablas base.
+    Cada vista incluye JOINs entre esquemas y puede consultarse con un simple SELECT *.
+  </div>
+
+  <div class="code-card">
+    <div class="code-card-header" onclick="toggle(this)">
+      <div class="code-card-title">
+        <span class="tag tag-view">VIEW</span>
+        <span class="tag tag-select">SELECT</span>
+        5 Vistas: VoluntariosActivos · ActividadesConInscritos · DonacionesConfirmadas · CertificadosEmitidos · UsuariosConRol
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="code-body">
+<pre><span class="cmt">/* 1 — Voluntarios activos con datos personales */</span>
+<span class="kw">CREATE VIEW</span> <span class="obj">Voluntariado.VW_VoluntariosActivos</span> <span class="kw">AS</span>
+<span class="kw">SELECT</span> v.VoluntarioID, p.PrimerNombre, p.PrimerApellido,
+       p.Email, v.FechaIngreso
+<span class="kw">FROM</span>      <span class="obj">Personas.Voluntario</span> v
+<span class="kw">JOIN</span>      <span class="obj">Personas.Persona</span>    p <span class="kw">ON</span> v.PersonaID = p.PersonaID
+<span class="kw">WHERE</span> v.Estado = <span class="str">'Activo'</span>;
+
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="obj">Voluntariado.VW_VoluntariosActivos</span>;
+
+<span class="cmt">/* 2 — Actividades con conteo de inscritos (LEFT JOIN + GROUP BY) */</span>
+<span class="kw">CREATE VIEW</span> <span class="obj">Voluntariado.VW_ActividadesConInscritos</span> <span class="kw">AS</span>
+<span class="kw">SELECT</span> a.ActividadID, a.NombreActividad, a.CupoMaximo,
+       <span class="fn">COUNT</span>(i.InscripcionID) <span class="kw">AS</span> TotalInscritos
+<span class="kw">FROM</span>      <span class="obj">Voluntariado.Actividad</span>   a
+<span class="kw">LEFT JOIN</span> <span class="obj">Voluntariado.Inscripcion</span> i
+    <span class="kw">ON</span> a.ActividadID = i.ActividadID
+<span class="kw">GROUP BY</span> a.ActividadID, a.NombreActividad, a.CupoMaximo;
+
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="obj">Voluntariado.VW_ActividadesConInscritos</span>;
+
+<span class="cmt">/* 3 — Donaciones confirmadas filtradas por estado */</span>
+<span class="kw">CREATE VIEW</span> <span class="obj">Donaciones.VW_DonacionesConfirmadas</span> <span class="kw">AS</span>
+<span class="kw">SELECT</span> d.DonacionID, p.PrimerNombre, p.PrimerApellido,
+       d.Monto, d.MetodoPago, d.FechaDonacion
+<span class="kw">FROM</span>  <span class="obj">Donaciones.Donacion</span> d
+<span class="kw">JOIN</span>  <span class="obj">Personas.Persona</span>    p <span class="kw">ON</span> d.PersonaID = p.PersonaID
+<span class="kw">WHERE</span> d.Estado = <span class="str">'Confirmada'</span>;
+
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="obj">Donaciones.VW_DonacionesConfirmadas</span>;
+
+<span class="cmt">/* 4 — Certificados con nombre de voluntario y actividad (multi-JOIN) */</span>
+<span class="kw">CREATE VIEW</span> <span class="obj">Certificados.VW_CertificadosEmitidos</span> <span class="kw">AS</span>
+<span class="kw">SELECT</span> c.CertificadoID, c.CodigoCertificado,
+       p.PrimerNombre, p.PrimerApellido,
+       a.NombreActividad, c.FechaEmision
+<span class="kw">FROM</span>  <span class="obj">Certificados.Certificado</span>  c
+<span class="kw">JOIN</span>  <span class="obj">Personas.Voluntario</span>        v <span class="kw">ON</span> c.VoluntarioID = v.VoluntarioID
+<span class="kw">JOIN</span>  <span class="obj">Personas.Persona</span>           p <span class="kw">ON</span> v.PersonaID    = p.PersonaID
+<span class="kw">JOIN</span>  <span class="obj">Voluntariado.Actividad</span>     a <span class="kw">ON</span> c.ActividadID  = a.ActividadID;
+
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="obj">Certificados.VW_CertificadosEmitidos</span>;
+
+<span class="cmt">/* 5 — Usuarios del sistema con su rol asignado */</span>
+<span class="kw">CREATE VIEW</span> <span class="obj">Seguridad.VW_UsuariosConRol</span> <span class="kw">AS</span>
+<span class="kw">SELECT</span> u.UsuarioID, u.NombreUsuario,
+       r.NombreRol, u.Estado
+<span class="kw">FROM</span>  <span class="obj">Seguridad.Usuario</span> u
+<span class="kw">JOIN</span>  <span class="obj">Seguridad.Rol</span>     r <span class="kw">ON</span> u.RolID = r.RolID;
+
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="obj">Seguridad.VW_UsuariosConRol</span>;</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ TRANSACCIONES -->
+<section id="tx">
+  <div class="section-header">
+    <div class="section-icon tx">🔒</div>
+    <div>
+      <div class="section-title">Transacciones</div>
+      <div class="section-desc">BEGIN TRANSACTION · COMMIT · ROLLBACK · TRY/CATCH</div>
+    </div>
+  </div>
+
+  <div class="callout tx">
+    Las <strong>Transacciones</strong> garantizan atomicidad: si algo falla, el <code>ROLLBACK</code> deshace todos los cambios.
+    El bloque <code>TRY/CATCH</code> captura errores en tiempo de ejecución.
+  </div>
+
+  <div class="code-card">
+    <div class="code-card-header" onclick="toggle(this)">
+      <div class="code-card-title">
+        <span class="tag tag-tx">TX</span>
+        <span class="tag tag-insert">INSERT</span>
+        <span class="tag tag-update">UPDATE</span>
+        5 Transacciones: Donación · Voluntario · Inscripción+Certificado · Usuario · Estado Actividad
+      </div>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="code-body">
+<pre><span class="cmt">/* TX 1 — Registrar donación */</span>
+<span class="kw">BEGIN TRY</span>
+    <span class="kw">BEGIN TRANSACTION</span>;
+
+    <span class="kw">INSERT INTO</span> <span class="obj">Donaciones.Donacion</span>(PersonaID, Monto, MetodoPago)
+    <span class="kw">VALUES</span> (<span class="num">191</span>, <span class="num">50000</span>, <span class="str">'PSE'</span>);
+
+    <span class="kw">COMMIT</span>;
+    <span class="fn">PRINT</span> <span class="str">'TRANSACCION COMPLETADA'</span>;
+<span class="kw">END TRY</span>
+<span class="kw">BEGIN CATCH</span>
+    <span class="fn">PRINT</span> <span class="fn">ERROR_MESSAGE</span>();
+    <span class="kw">ROLLBACK</span>;
+<span class="kw">END CATCH</span>;
+
+<span class="cmt">/* TX 2 — Registrar voluntario */</span>
+<span class="kw">BEGIN TRY</span>
+    <span class="kw">BEGIN TRANSACTION</span>;
+
+    <span class="kw">INSERT INTO</span> <span class="obj">Personas.Voluntario</span>(PersonaID, FechaIngreso)
+    <span class="kw">VALUES</span> (<span class="num">190</span>, <span class="fn">GETDATE</span>());
+
+    <span class="kw">COMMIT</span>;
+<span class="kw">END TRY</span>
+<span class="kw">BEGIN CATCH</span>
+    <span class="fn">PRINT</span> <span class="fn">ERROR_MESSAGE</span>();
+    <span class="kw">ROLLBACK</span>;
+<span class="kw">END CATCH</span>;
+
+<span class="cmt">/* TX 3 — Inscripción + Certificado (operación atómica doble) */</span>
+<span class="kw">BEGIN TRY</span>
+    <span class="kw">BEGIN TRANSACTION</span>;
+
+    <span class="kw">INSERT INTO</span> <span class="obj">Voluntariado.Inscripcion</span>(VoluntarioID, ActividadID)
+    <span class="kw">VALUES</span> (<span class="num">1</span>, <span class="num">1</span>);
+
+    <span class="kw">INSERT INTO</span> <span class="obj">Certificados.Certificado</span>(VoluntarioID, ActividadID)
+    <span class="kw">VALUES</span> (<span class="num">1</span>, <span class="num">1</span>);
+
+    <span class="kw">COMMIT</span>;
+<span class="kw">END TRY</span>
+<span class="kw">BEGIN CATCH</span>
+    <span class="kw">ROLLBACK</span>;
+<span class="kw">END CATCH</span>;
+
+<span class="cmt">/* TX 4 — Crear usuario de seguridad */</span>
+<span class="kw">BEGIN TRY</span>
+    <span class="kw">BEGIN TRANSACTION</span>;
+
+    <span class="kw">INSERT INTO</span> <span class="obj">Seguridad.Usuario</span>(PersonaID, NombreUsuario, Contrasena, RolID)
+    <span class="kw">VALUES</span> (<span class="num">1</span>, <span class="str">'luisr'</span>, <span class="str">'123456'</span>, <span class="num">1</span>);
+
+    <span class="kw">COMMIT</span>;
+<span class="kw">END TRY</span>
+<span class="kw">BEGIN CATCH</span>
+    <span class="kw">ROLLBACK</span>;
+<span class="kw">END CATCH</span>;
+
+<span class="cmt">/* TX 5 — Actualizar estado de actividad */</span>
+<span class="kw">BEGIN TRY</span>
+    <span class="kw">BEGIN TRANSACTION</span>;
+
+    <span class="kw">UPDATE</span> <span class="obj">Voluntariado.Actividad</span>
+    <span class="kw">SET</span>   Estado = <span class="str">'Cancelada'</span>
+    <span class="kw">WHERE</span> ActividadID = <span class="num">1</span>;
+
+    <span class="kw">COMMIT</span>;
+<span class="kw">END TRY</span>
+<span class="kw">BEGIN CATCH</span>
+    <span class="kw">ROLLBACK</span>;
+<span class="kw">END CATCH</span>;</pre>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  FUNDAPP · SQL Server · DML Evidence &nbsp;·&nbsp; SP · Funciones · Triggers · Vistas · Transacciones
+</footer>
+
+<script>
+  function toggle(header) {
+    header.classList.toggle('open');
+    const body = header.nextElementSibling;
+    body.classList.toggle('open');
+  }
+
+  // Open all on load
+  document.querySelectorAll('.code-card-header').forEach(h => {
+    h.classList.add('open');
+    h.nextElementSibling.classList.add('open');
+  });
+</script>
+</body>
+</html>
